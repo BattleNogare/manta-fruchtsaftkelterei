@@ -1,1 +1,899 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>H&H Weinfabrik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link id="dynFavicon" rel="icon" href="">
+  <!-- Orbitron als frei nutzbarer Ersatzstil (Antelope-H-Look) -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* neue Farbwelt (Gold / Dunkel) */
+      --wine-900:#050608;
+      --wine-800:#111319;
+      --wine-700:#181b24;
+      --ink:#f7f6f2;
+      --muted:#c9c7d2;
+      --line:#323544;
+      --focus:#f4ab2840;
+      --radius:14px;
+      --price-wine:#f4ab28;
+    }
 
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;color:var(--ink);
+      background:var(--wine-900) no-repeat center/cover fixed;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
+      line-height:1.45;
+    }
+    .page{max-width:1280px;margin:0 auto;padding:2rem 1.2rem}
+
+    header{
+      display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+      padding:1rem 1.25rem;border:1px solid var(--line);border-radius:var(--radius);
+      background:
+        radial-gradient(900px 400px at 10% -20%, rgba(244,171,40,.18), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
+      box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    header img.logo{height:90px;width:auto;object-fit:contain}
+    .brand h1{margin:0;font-weight:750;font-size:clamp(1.6rem,3vw,2.2rem)}
+    .brand .sub{margin:0;color:var(--muted);font-size:.98rem}
+
+    .header-text{
+      margin:1rem 0 1.2rem;padding:1rem 1.2rem;border:1px solid var(--line);
+      background:var(--wine-800);border-radius:12px;color:var(--muted)
+    }
+    .header-text .inner{max-width:50%;white-space:pre-wrap}
+    @media (max-width:900px){.header-text .inner{max-width:100%}}
+
+    .hint{
+      margin:1rem 0 1.2rem;padding:.85rem 1rem;border:1px solid var(--line);
+      background:var(--wine-800);border-radius:12px;color:var(--muted)
+    }
+
+    hr.rule{height:1px;border:0;margin:1.4rem 0;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+
+    /* ===== Produkt-Boxen & Grids ===== */
+    .product-section{
+      background:var(--wine-800);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:1rem 1.2rem;
+      margin-bottom:1rem;
+    }
+    .product-section h2{
+      margin:.1rem 0 .9rem;
+      font-size:1.2rem;
+      letter-spacing:.03em;
+    }
+
+    .grid{
+      display:grid;
+      gap:1rem;
+      grid-template-columns:repeat(4,minmax(0,1fr)); /* 4 Spalten auf Desktop */
+    }
+    @media (max-width:1100px){
+      .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media (max-width:800px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:560px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:var(--wine-700);border:1px solid var(--line);border-radius:var(--radius);
+      overflow:hidden;cursor:pointer;transition:transform .18s, box-shadow .18s, border-color .18s
+    }
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 34px rgba(0,0,0,.45);
+      border-color:var(--focus);
+    }
+    .card img{width:100%;height:230px;object-fit:cover;display:block;background:#0b0f16}
+    .meta{padding:.85rem 1rem 1rem;text-align:center}
+    .name{margin:0 0 .35rem;font-weight:700}
+
+    /* Preise (Orbitron) */
+    .price{
+      font-family:"Orbitron","Arial Black",sans-serif;
+      font-weight:800;
+      text-align:center;
+      color:var(--price-wine);
+      letter-spacing:1px;
+      font-size:1.8rem;
+      word-break:break-word;
+    }
+
+    /* ===== Modal (Produkt-Details) ===== */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.6);
+      display:none;align-items:center;justify-content:center;padding:1.25rem;z-index:30;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .overlay.show{display:flex}
+    .modal{
+      width:min(980px,96vw);max-height:92vh;overflow:auto;
+      background:var(--wine-700);border:1px solid var(--line);border-radius:18px;
+      box-shadow:0 30px 70px rgba(0,0,0,.55)
+    }
+    .modal-media img{width:100%;height:440px;object-fit:contain;display:block;background:#0b0f16}
+    .modal-body{padding:1rem 1.15rem 1.25rem}
+    .modal-title{margin:.2rem 0 .35rem;font-size:1.45rem;font-weight:800;text-align:center}
+    .modal-price{margin:0 0 .8rem;text-align:center}
+
+    /* Bild2 links (20%), Text rechts (80%); Bild nie höher als die Beschreibung */
+    .modal-flex{display:flex;gap:.5rem;align-items:flex-start}
+    .modal-left{
+      flex:0 0 20%;
+      display:flex;align-items:flex-start;justify-content:flex-start;
+      overflow:hidden; height:auto; padding:0;
+    }
+    .modal-left img{
+      width:100%; height:100%; object-fit:contain; display:block;
+    }
+    .modal-right{flex:1 1 80%;min-width:0}
+    .modal-desc{color:var(--muted);white-space:pre-wrap;margin:0}
+
+    @media (max-width:900px){
+      .modal-flex{flex-direction:column}
+      .modal-left{flex-basis:auto;height:auto}
+      .modal-left img{height:auto;max-height:60vh}
+    }
+
+    /* ===== Ankauf + Bestellung ===== */
+    .ankauf-wrap{
+      display:grid;
+      gap:1rem;
+      align-items:start;
+      grid-template-columns:1.3fr 1fr 1fr;  /* Liste | Bild | Bestellung */
+      margin:1.4rem 0 .6rem
+    }
+    @media (max-width:900px){
+      .ankauf-wrap{grid-template-columns:1fr}
+    }
+    .ankauf-list{
+      background:var(--wine-800);border:1px solid var(--line);
+      border-radius:var(--radius);padding:.8rem .9rem 1rem
+    }
+    .ankauf-list h2{margin:.2rem 0 .6rem;font-size:1.15rem}
+    .ankauf-item{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:.65rem .7rem;border:1px dashed var(--line);
+      border-radius:12px;background:var(--wine-700)
+    }
+    .ankauf-item .what{font-weight:650}
+    .ankauf-item .price{
+      min-width:120px;
+      white-space:nowrap;
+    }
+    .ankauf-media{
+      background:transparent;border:none;padding:0;
+      display:flex;justify-content:flex-start;align-items:flex-start;
+      height:100%
+    }
+    .ankauf-media img{
+      border:none;background:transparent;max-width:100%;max-height:100%;
+      object-fit:contain;object-position:left top;display:block
+    }
+
+    /* Bestellung-Box */
+    .order-box{
+      background:var(--wine-800);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:.9rem 1rem 1rem;
+      display:flex;
+      flex-direction:column;
+      gap:.6rem;
+    }
+    .order-box h2{
+      margin:.2rem 0 .3rem;
+      font-size:1.15rem;
+    }
+    .order-box p{
+      margin:0;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .order-btn{
+      margin-top:.4rem;
+      align-self:flex-start;
+      padding:.5rem 1.2rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--wine-700);
+      color:var(--ink);
+      font-weight:600;
+      cursor:pointer;
+      letter-spacing:.03em;
+      transition:transform .15s, box-shadow .15s, background .15s;
+    }
+    .order-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 8px 18px rgba(0,0,0,.35);
+      background:#5a430d;
+    }
+
+    /* ===== Standort & Fotos ===== */
+    .section{
+      background:var(--wine-800);border:1px solid var(--line);
+      border-radius:var(--radius);padding:1rem 1.2rem;margin:1.2rem 0
+    }
+    .section .desc{color:var(--muted);margin:0 0 .8rem}
+
+    #standortImg{
+      width:100%;
+      height:auto;
+      object-fit:contain;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#0b0f16;
+      display:block;
+      margin-bottom:1rem;
+    }
+
+    .photo-row{display:grid;gap:.9rem;grid-template-columns:1fr}
+    @media (min-width:900px){.photo-row{grid-template-columns:1fr 1fr}}
+    .photo{
+      width:100%;aspect-ratio:16/9;object-fit:cover;
+      border-radius:12px;border:1px solid var(--line)
+    }
+
+    footer.footer{margin:1.5rem 0 .5rem;color:var(--muted);font-size:.85rem;text-align:center}
+    footer.footer a{color:var(--ink);text-decoration:underline}
+
+    /* ===== Bestell-Modal ===== */
+    #orderOverlay .modal{
+      width:min(720px,96vw);
+    }
+    .order-form{
+      padding:1rem 1.15rem 1.3rem;
+    }
+    .order-form h3{
+      margin:.2rem 0 .8rem;
+      text-align:center;
+      font-size:1.4rem;
+    }
+    .order-row{
+      margin-bottom:.75rem;
+      display:flex;
+      flex-direction:column;
+      gap:.25rem;
+    }
+    .order-row label{
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    .order-input, .order-select{
+      padding:.45rem .6rem;
+      border-radius:8px;
+      border:1px solid var(--line);
+      background:var(--wine-800);
+      color:var(--ink);
+      font:inherit;
+    }
+    .order-input:focus, .order-select:focus{
+      outline:2px solid var(--focus);
+      outline-offset:1px;
+    }
+
+    #orderItems{
+      display:flex;
+      flex-direction:column;
+      gap:.5rem;
+    }
+    .order-item-row{
+      display:flex;
+      gap:.4rem;
+      align-items:center;
+      flex-wrap:nowrap;
+    }
+    .order-item-row .order-wine-select{
+      flex:1 1 auto;
+      min-width:0;
+    }
+    .order-item-row .order-qty-input{
+      width:80px;
+      flex:0 0 auto;
+    }
+    .order-item-row .order-remove-btn{
+      flex:0 0 auto;
+      padding:.25rem .5rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--wine-700);
+      color:var(--muted);
+      font-size:.75rem;
+      cursor:pointer;
+    }
+    .order-item-row .order-remove-btn:hover{
+      background:#5a430d;
+      color:var(--ink);
+    }
+    .order-add-btn{
+      margin-top:.35rem;
+      align-self:flex-start;
+      padding:.3rem .9rem;
+      border-radius:999px;
+      border:1px dashed var(--line);
+      background:transparent;
+      color:var(--muted);
+      font-size:.85rem;
+      cursor:pointer;
+    }
+    .order-add-btn:hover{
+      background:var(--wine-700);
+      color:var(--ink);
+    }
+
+    .order-actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      margin-top:.9rem;
+      flex-wrap:wrap;
+    }
+    .order-total{
+      font-size:.95rem;
+      color:var(--muted);
+    }
+    .order-total strong{
+      color:var(--ink);
+    }
+    .order-submit{
+      padding:.55rem 1.4rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--price-wine);
+      color:#1a1304;
+      font-weight:700;
+      cursor:pointer;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      font-size:.85rem;
+      transition:transform .15s, box-shadow .15s, filter .15s;
+    }
+    .order-submit:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.45);
+      filter:brightness(1.05);
+    }
+    .order-status{
+      margin-top:.6rem;
+      font-size:.9rem;
+      color:var(--muted);
+      min-height:1.1em;
+    }
+    .order-status.ok{
+      color:#7dd97d;
+    }
+    .order-status.err{
+      color:#ff9aa2;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <img class="logo" id="logoImg" alt="Logo" />
+      <div class="brand">
+        <h1>H&amp;H Weinfabrik</h1>
+        <p class="sub" id="logoDesc"></p>
+      </div>
+    </header>
+
+    <div id="headerText" class="header-text" hidden><div class="inner" id="headerTextInner"></div></div>
+
+    <div id="hint" class="hint">🔄 Lade Daten aus Google Sheets …</div>
+
+    <!-- Produkt-Bereiche: Saft & Schnaps -->
+    <section>
+      <div class="product-section">
+        <h2>Saft</h2>
+        <div id="saftGrid" class="grid"></div>
+      </div>
+
+      <div class="product-section">
+        <h2>Schnaps</h2>
+        <div id="schnapsGrid" class="grid"></div>
+      </div>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <div class="ankauf-wrap">
+        <div class="ankauf-list" id="ankaufListBlock">
+          <h2>Ankauf</h2>
+          <ul id="ankaufList"></ul>
+        </div>
+        <div class="ankauf-media"><img id="ankaufImg" alt="Ankauf"></div>
+
+        <div class="order-box">
+          <h2>Bestellung</h2>
+          <!-- Text kommt jetzt aus Website-Tabelle (Funktion = bestellung) -->
+          <p id="orderText">Sie möchten einen unserer Weine bestellen? Öffnen Sie das Bestellformular und senden Sie uns Ihre Anfrage direkt.</p>
+          <button id="openOrderBtn" class="order-btn" type="button">Bestellen</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="standortSection" hidden>
+      <h2>Standort</h2>
+      <p class="desc" id="standortDesc"></p>
+      <img id="standortImg" alt="Standort" />
+      <div class="photo-row">
+        <img id="photo1" class="photo" alt="Foto 1" />
+        <img id="photo2" class="photo" alt="Foto 2" />
+      </div>
+    </section>
+
+    <footer id="siteFooter" class="footer" hidden>
+      <div id="footerDesc"></div>
+      <div><a id="footerLink" href="#" target="_blank" rel="noopener"></a></div>
+    </footer>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <div class="modal-media"><img id="modalImg" alt=""></div>
+      <div class="modal-body">
+        <h3 id="modalTitle" class="modal-title"></h3>
+        <div id="modalPrice" class="modal-price price"></div>
+        <div class="modal-flex" id="modalFlex">
+          <div class="modal-left" id="modalLeft">
+            <img id="modalImg2" alt="Weinbild 2">
+          </div>
+          <div class="modal-right">
+            <div id="modalDesc" class="modal-desc"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="orderOverlay" class="overlay">
+    <div class="modal">
+      <div class="order-form">
+        <h3>Bestellung aufgeben</h3>
+        <form id="orderForm">
+          <div class="order-row">
+            <label for="orderName">Ihr Name</label>
+            <input id="orderName" name="name" class="order-input" required />
+          </div>
+          <div class="order-row">
+            <label for="orderContact">Kontaktdaten (E-Mail, Telefon o.ä.)</label>
+            <input id="orderContact" name="contact" class="order-input" required />
+          </div>
+
+          <div class="order-row">
+            <label>Produkte &amp; Mengen</label>
+            <div id="orderItems"></div>
+            <button type="button" id="addItemBtn" class="order-add-btn">+ weiteres Produkt</button>
+          </div>
+
+          <div class="order-actions">
+            <div class="order-total">
+              Gesamtpreis: <strong id="orderTotal">–</strong>
+            </div>
+            <button type="submit" class="order-submit">Bestellung senden</button>
+          </div>
+          <div id="orderStatus" class="order-status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+const SHEET_ID="1NInzWKe1202CButQN9L2uflV429Kb7agNUutUeif3Jc";
+const TAB_WEBSITE="Website",TAB_SAFT="Saft",TAB_SCHNAPS="Schnaps",TAB_ANKAUF="Ankauf";
+const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1434918593828491308/AcpMTdB8Z0zXhvBhLn-be5GHl5A-PGe4MLOny03hHJcPCtCm0JwYbbk7HxtjBtRlD7rw";
+
+const logoImg=document.getElementById("logoImg"),logoDescEl=document.getElementById("logoDesc");
+const headerText=document.getElementById("headerText"),headerTextInner=document.getElementById("headerTextInner");
+const hintEl=document.getElementById("hint");
+const saftGrid=document.getElementById("saftGrid");
+const schnapsGrid=document.getElementById("schnapsGrid");
+const ankaufList=document.getElementById("ankaufList"),ankaufImg=document.getElementById("ankaufImg"),ankaufListBlock=document.getElementById("ankaufListBlock");
+const standortSection=document.getElementById("standortSection"),standortDescEl=document.getElementById("standortDesc"),
+      standortImg=document.getElementById("standortImg"),photo1Img=document.getElementById("photo1"),photo2Img=document.getElementById("photo2");
+const siteFooter=document.getElementById("siteFooter"),footerDescEl=document.getElementById("footerDesc"),footerLinkEl=document.getElementById("footerLink");
+const orderTextEl=document.getElementById("orderText");
+
+const overlay=document.getElementById("overlay"),modalImg=document.getElementById("modalImg"),modalTitle=document.getElementById("modalTitle"),
+      modalPrice=document.getElementById("modalPrice"),modalDesc=document.getElementById("modalDesc"),modalImg2=document.getElementById("modalImg2"),
+      modalLeft=document.getElementById("modalLeft");
+
+const faviconEl=document.getElementById("dynFavicon");
+
+// Bestell-UI
+const openOrderBtn=document.getElementById("openOrderBtn");
+const orderOverlay=document.getElementById("orderOverlay");
+const orderForm=document.getElementById("orderForm");
+const orderItemsContainer=document.getElementById("orderItems");
+const addItemBtn=document.getElementById("addItemBtn");
+const orderTotalEl=document.getElementById("orderTotal");
+const orderStatusEl=document.getElementById("orderStatus");
+
+let weinDaten=[]; // jetzt alle Produkte (Saft + Schnaps)
+
+function gvizJSONP(sheet){
+  return new Promise((res,rej)=>{
+    const cb="cb_"+Math.random().toString(36).slice(2);
+    const u=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json,responseHandler:${cb}&headers=1&sheet=${sheet}`;
+    const s=document.createElement("script");
+    let to=setTimeout(()=>{rej("Timeout "+sheet);cleanup();},15000);
+    function cleanup(){clearTimeout(to);try{delete window[cb];}catch{}s.remove();}
+    window[cb]=p=>{
+      cleanup();
+      try{
+        const c=p.table.cols.map(c=>(c.label||c.id||"").trim());
+        const r=p.table.rows.map(r=>{
+          const o={};(r.c||[]).forEach((x,i)=>o[c[i]||"c"+i]=x?x.v:"");return o;
+        });
+        res(r);
+      }catch(e){rej(e);}
+    };
+    s.src=u;document.head.appendChild(s);
+  });
+}
+
+function euro(v){
+  if(v==null||v==="")return"";
+  let s=String(v).trim().replace(/[^\d.,-]/g,"");
+  if(!s)return"";
+  const d=s.lastIndexOf("."),c=s.lastIndexOf(",");const comma=c>d;
+  if(comma){s=s.replace(/\./g,"").replace(",",".");}else{s=s.replace(/,/g,"");}
+  const n=Number(s);return isFinite(n)?n.toLocaleString("de-DE")+" €":String(v);
+}
+function euroProStueck(v){const t=euro(v);return t? t.replace(/\s*€$/," €")+"/St.":"";}
+
+function getPreisText(row){
+  const pa = row.Preis_Anzeige !== undefined ? String(row.Preis_Anzeige||"").trim() : "";
+  if(pa) return pa;
+  const p = row.Preis !== undefined ? String(row.Preis||"").trim() : "";
+  return p;
+}
+
+function buildWineCard(w){
+  const c=document.createElement("article");c.className="card";
+  const img=document.createElement("img");img.src=w.BildAI||w.Bild||"";img.alt=w.Name||"Produkt";
+  const meta=document.createElement("div");meta.className="meta";
+  const name=document.createElement("p");name.className="name";name.textContent=w.Name||"";
+  const price=document.createElement("div");price.className="price";price.textContent=w.Preis||"";
+  meta.append(name,price);c.append(img,meta);
+  c.onclick=()=>showModal(w);
+  return c;
+}
+
+function showModal(w){
+  modalImg.src=w.BildAI||w.Bild||"";
+  modalTitle.textContent=w.Name||"";
+  modalPrice.textContent=w.Preis||"";
+  modalDesc.textContent=(w.Beschreibung||"").toString().trim();
+
+  if(w.Bild2){
+    modalImg2.src=w.Bild2;
+    modalLeft.style.display="flex";
+    modalImg2.style.display="block";
+    if(modalImg2.complete){ syncModalHeights(); }
+    else { modalImg2.onload = ()=>syncModalHeights(); }
+  }else{
+    modalImg2.removeAttribute("src");
+    modalImg2.style.display="none";
+    modalLeft.style.display="none";
+  }
+
+  overlay.classList.add("show");
+  requestAnimationFrame(syncModalHeights);
+}
+
+overlay.addEventListener("click",e=>{
+  if(e.target===overlay) overlay.classList.remove("show");
+});
+
+function syncModalHeights(){
+  if(window.matchMedia("(max-width: 900px)").matches){
+    modalLeft.style.height = "auto";
+    return;
+  }
+  if(modalLeft.style.display==="none") return;
+  const descH = modalDesc.getBoundingClientRect().height;
+  modalLeft.style.height = Math.max(descH, 80) + "px";
+}
+
+function syncAnkaufHeights(){
+  const h=ankaufListBlock.getBoundingClientRect().height;
+  ankaufImg.style.maxHeight=h+"px";
+}
+
+function parseUnitPrice(text){
+  if(!text) return NaN;
+  const m = String(text).match(/(\d[\d\.]*)/);
+  if(!m) return NaN;
+  const numStr = m[1].replace(/\./g,"");
+  const n = Number(numStr);
+  return isFinite(n) ? n : NaN;
+}
+
+function createOrderItemRow(){
+  const row=document.createElement("div");
+  row.className="order-item-row";
+
+  const select=document.createElement("select");
+  select.className="order-select order-wine-select";
+  const qty=document.createElement("input");
+  qty.type="number";
+  qty.min="1";
+  qty.value="1";
+  qty.className="order-input order-qty-input";
+
+  const removeBtn=document.createElement("button");
+  removeBtn.type="button";
+  removeBtn.className="order-remove-btn";
+  removeBtn.textContent="–";
+
+  const placeholder=document.createElement("option");
+  placeholder.value="";
+  placeholder.textContent="Produkt auswählen …";
+  select.appendChild(placeholder);
+  weinDaten.forEach((w,idx)=>{
+    const opt=document.createElement("option");
+    opt.value=String(idx);
+    opt.textContent=w.Name || ("Produkt " + (idx+1));
+    select.appendChild(opt);
+  });
+
+  select.addEventListener("change",updateOrderTotal);
+  qty.addEventListener("input",updateOrderTotal);
+  removeBtn.addEventListener("click",()=>{
+    if(orderItemsContainer.children.length>1){
+      row.remove();
+      updateOrderTotal();
+    }
+  });
+
+  row.appendChild(select);
+  row.appendChild(qty);
+  row.appendChild(removeBtn);
+  return row;
+}
+
+function updateOrderTotal(){
+  const rows=orderItemsContainer.querySelectorAll(".order-item-row");
+  let totalNumeric=0;
+  let hasNumeric=false;
+
+  rows.forEach(row=>{
+    const select=row.querySelector(".order-wine-select");
+    const qtyInput=row.querySelector(".order-qty-input");
+    if(!select || !qtyInput) return;
+    const idx=select.value;
+    const qty=parseInt(qtyInput.value,10)||0;
+    if(!idx || !weinDaten[idx] || qty<=0) return;
+    const w=weinDaten[idx];
+    const unit=parseUnitPrice(w.Preis);
+    if(!isNaN(unit)){
+      hasNumeric=true;
+      totalNumeric+=unit*qty;
+    }
+  });
+
+  if(hasNumeric){
+    orderTotalEl.textContent=totalNumeric.toLocaleString("de-DE")+" €";
+  }else{
+    orderTotalEl.textContent="–";
+  }
+}
+
+openOrderBtn.addEventListener("click",()=>{
+  orderStatusEl.textContent="";
+  orderStatusEl.className="order-status";
+  orderOverlay.classList.add("show");
+  updateOrderTotal();
+});
+
+orderOverlay.addEventListener("click",e=>{
+  if(e.target===orderOverlay) orderOverlay.classList.remove("show");
+});
+
+addItemBtn.addEventListener("click",()=>{
+  const row=createOrderItemRow();
+  orderItemsContainer.appendChild(row);
+});
+
+orderForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  orderStatusEl.textContent="";
+  orderStatusEl.className="order-status";
+
+  const name = document.getElementById("orderName").value.trim();
+  const contact = document.getElementById("orderContact").value.trim();
+
+  const rows=orderItemsContainer.querySelectorAll(".order-item-row");
+  const items=[];
+  let totalNumeric=0;
+  let hasNumeric=false;
+
+  rows.forEach(row=>{
+    const select=row.querySelector(".order-wine-select");
+    const qtyInput=row.querySelector(".order-qty-input");
+    if(!select || !qtyInput) return;
+    const idx=select.value;
+    const qty=parseInt(qtyInput.value,10)||0;
+    if(!idx || !weinDaten[idx] || qty<=0) return;
+    const w=weinDaten[idx];
+    const unit=parseUnitPrice(w.Preis);
+    let lineTotalText="";
+    if(!isNaN(unit)){
+      hasNumeric=true;
+      const lineTotal=unit*qty;
+      totalNumeric+=lineTotal;
+      lineTotalText=lineTotal.toLocaleString("de-DE")+" €";
+    }else{
+      lineTotalText=w.Preis ? w.Preis+" × "+qty : String(qty);
+    }
+    items.push({
+      name:w.Name||"Unbekanntes Produkt",
+      preisText:w.Preis||"k.A.",
+      qty,
+      lineTotalText
+    });
+  });
+
+  if(!name || !contact || items.length===0){
+    orderStatusEl.textContent="Bitte alle Felder ausfüllen und mindestens ein Produkt wählen.";
+    orderStatusEl.classList.add("err");
+    return;
+  }
+
+  const totalDisplay = hasNumeric
+    ? totalNumeric.toLocaleString("de-DE")+" €"
+    : items.map(i=>i.lineTotalText).join(", ");
+
+  const bestellText = items.map(i=>`• ${i.name} – ${i.preisText} × ${i.qty} = ${i.lineTotalText}`).join("\n");
+
+  const embed = {
+    title: "Neue Bestellung",
+    description: "Eine neue Bestellung ist in der H&H Weinfabrik eingegangen.",
+    color: 0xf4ab28,
+    fields: [
+      { name: "Besteller", value: name, inline: false },
+      { name: "Kontakt", value: contact, inline: false },
+      { name: "Bestellte Produkte", value: bestellText || "Keine Positionen", inline: false },
+      { name: "Gesamtpreis", value: totalDisplay || "k.A.", inline: false }
+    ],
+    timestamp: new Date().toISOString()
+  };
+
+  const payload = { embeds: [embed] };
+
+  try{
+    orderStatusEl.textContent="Sende Bestellung …";
+    await fetch(DISCORD_WEBHOOK,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    orderStatusEl.textContent="Danke für Ihre Bestellung!";
+    orderStatusEl.classList.add("ok");
+
+    orderForm.reset();
+    orderItemsContainer.innerHTML="";
+    orderItemsContainer.appendChild(createOrderItemRow());
+    updateOrderTotal();
+
+    setTimeout(()=>{orderOverlay.classList.remove("show");},1200);
+  }catch(err){
+    console.error(err);
+    orderStatusEl.textContent="Fehler beim Senden der Bestellung. Bitte später erneut versuchen.";
+    orderStatusEl.classList.add("err");
+  }
+});
+
+(async()=>{
+  try{
+    const [ws,saft,schnaps,ank]=await Promise.all([
+      gvizJSONP(TAB_WEBSITE),
+      gvizJSONP(TAB_SAFT),
+      gvizJSONP(TAB_SCHNAPS),
+      gvizJSONP(TAB_ANKAUF)
+    ]);
+
+    let logo="",bg="",fav="",descLogo="",headerDesc="",ankImgURL="",standort="",descStandort="",p1="",p2="",footerD="",footerL="",bestellText="";
+    ws.forEach(r=>{
+      const f=(r.Funktion||"").toLowerCase();
+      if(f==="logo"){logo=r.Link;descLogo=r.Beschreibung}
+      if(f==="hintergrund"){bg=r.Link}
+      if(f==="favicon-link"||f==="favicon"){fav=r.Link}
+      if(f==="header"){headerDesc=r.Beschreibung}
+      if(f==="ankauf"){ankImgURL=r.Link}
+      if(f==="standort"){standort=r.Link;descStandort=r.Beschreibung}
+      if(f==="photo1"){p1=r.Link}
+      if(f==="photo2"){p2=r.Link}
+      if(f==="footer"){footerD=r.Beschreibung;footerL=r.Link}
+      if(f==="bestellung"){bestellText=r.Beschreibung}
+    });
+    if(logo)logoImg.src=logo;
+    if(bg)document.body.style.backgroundImage=`url('${bg}')`;
+    if(fav)faviconEl.href=fav;
+    logoDescEl.textContent=descLogo||"";
+    if(headerDesc){headerTextInner.textContent=headerDesc;headerText.hidden=false;}
+    if(bestellText && orderTextEl){orderTextEl.textContent=bestellText;}
+
+    // Produkte füllen: Saft & Schnaps
+    weinDaten=[];
+    saftGrid.innerHTML="";
+    schnapsGrid.innerHTML="";
+
+    function processProduktRows(rows, gridEl, kategorieName){
+      rows.forEach(r=>{
+        const preisText = getPreisText(r);
+        const w={
+          ID:r.ID,
+          Name:r.Name,
+          Beschreibung:r.Beschreibung,
+          Preis:preisText,
+          BildAI:r.BildAI,
+          Bild2:r.Bild2,
+          Bild:r.Bild,
+          Kategorie:kategorieName
+        };
+        if(w.Name && (w.BildAI||w.Bild)){
+          gridEl.append(buildWineCard(w));
+          weinDaten.push(w);
+        }
+      });
+    }
+
+    processProduktRows(saft, saftGrid, "Saft");
+    processProduktRows(schnaps, schnapsGrid, "Schnaps");
+
+    // Bestell-Select initialisieren
+    orderItemsContainer.innerHTML="";
+    orderItemsContainer.appendChild(createOrderItemRow());
+    updateOrderTotal();
+
+    if(ankImgURL) ankaufImg.src = ankImgURL;
+
+    ankaufList.innerHTML="";
+    ank.forEach(a=>{
+      const li=document.createElement("li");li.className="ankauf-item";
+      li.innerHTML=`<div class="what">${a.Anwendung||""}</div><div class="price">${euroProStueck(a.Preis||"")}</div>`;
+      ankaufList.append(li);
+    });
+
+    if(standort||descStandort||p1||p2){
+      standortSection.hidden=false;
+      standortDescEl.textContent=descStandort||"";
+      if(standort)standortImg.src=standort;
+      if(p1)photo1Img.src=p1;
+      if(p2)photo2Img.src=p2;
+    }
+
+    if(footerD||footerL){
+      if(footerD)footerDescEl.textContent=footerD;
+      if(footerL){footerLinkEl.textContent=footerL;footerLinkEl.href=footerL;}
+      siteFooter.hidden=false;
+    }
+
+  }catch(e){
+    console.error(e);
+    const err=document.createElement("div");err.className="hint";err.textContent="❌ Fehler beim Laden: "+e;
+    document.querySelector(".page").prepend(err);
+  }finally{
+    if(hintEl && hintEl.parentNode) hintEl.parentNode.removeChild(hintEl);
+    syncAnkaufHeights();
+    window.addEventListener("resize",()=>{ syncAnkaufHeights(); syncModalHeights(); updateOrderTotal(); });
+  }
+})();
+</script>
+</body>
+</html>
