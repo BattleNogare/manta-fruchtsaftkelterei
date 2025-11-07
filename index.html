@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>H&H Weinfabrik</title>
+  <title>Manta’s Fruchtsaftkelterei</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link id="dynFavicon" rel="icon" href="">
   <!-- Orbitron als frei nutzbarer Ersatzstil (Antelope-H-Look) -->
@@ -478,14 +478,14 @@
     <header>
       <img class="logo" id="logoImg" alt="Logo" />
       <div class="brand">
-        <h1>H&amp;H Weinfabrik</h1>
+        <h1>Manta’s Fruchtsaftkelterei</h1>
         <p class="sub" id="logoDesc"></p>
       </div>
     </header>
 
     <div id="headerText" class="header-text" hidden><div class="inner" id="headerTextInner"></div></div>
 
-    <div id="hint" class="hint">🔄 Lade Daten aus Google Sheets …</div>
+    <div id="hint" class="hint">🔄 Lade Daten</div>
 
     <!-- Produkt-Bereiche: Saft & Schnaps -->
     <section>
@@ -588,7 +588,7 @@
 <script>
 const SHEET_ID="1NInzWKe1202CButQN9L2uflV429Kb7agNUutUeif3Jc";
 const TAB_WEBSITE="Website",TAB_SAFT="Saft",TAB_SCHNAPS="Schnaps",TAB_ANKAUF="Ankauf";
-const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1434918593828491308/AcpMTdB8Z0zXhvBhLn-be5GHl5A-PGe4MLOny03hHJcPCtCm0JwYbbk7HxtjBtRlD7rw";
+const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1409574315598544906/zyhruAAcS2YgKTAWFb4TzR3XnDgzVma3f44Hygdn5tFY7RsXHOMgtTiMzQSZMzb3fX_a";
 
 const logoImg=document.getElementById("logoImg"),logoDescEl=document.getElementById("logoDesc");
 const headerText=document.getElementById("headerText"),headerTextInner=document.getElementById("headerTextInner");
@@ -856,7 +856,7 @@ orderForm.addEventListener("submit",async e=>{
 
   const embed = {
     title: "Neue Bestellung",
-    description: "Eine neue Bestellung ist in der H&H Weinfabrik eingegangen.",
+    description: "Eine neue Bestellung ist eingegangen.",
     color: 0xf4ab28,
     fields: [
       { name: "Besteller", value: name, inline: false },
